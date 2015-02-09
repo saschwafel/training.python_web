@@ -1,98 +1,148 @@
+import mimetypes
+import os
 import socket
 import sys
 
-
-def server(log_buffer=sys.stderr):
-    address = ('127.0.0.1', 8080)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    print >>log_buffer, "making a server on {0}:{1}".format(*address)
-    sock.bind(address)
-    sock.listen(1)
-
-    try:
-        while True:
-            print >>log_buffer, 'waiting for a connection'
-            conn, addr = sock.accept() # blocking
-            try:
-                print >>log_buffer, 'connection - {0}:{1}'.format(*addr)
-
-                request = ""
-
-                while True:
-
-                    data = conn.recv(1024)
-
-                    request+=data
-
-                    if len(data) < 1024:
-                        break
-
-                try:
-
-                    uri = parse_request(request)
-
-                except NotImplementedError:
-                    response = response_method_not_allowed()
-
-                else:
-
-                    content, _type = resolve_uri(uri)
-
-                try:
-                    response = response_ok(content, type)
-
-                except NameError:
-                    response = response_not_found()
-
-                print >>log_buffer, 'sending response'
-                
-                conn.sendall(response)
-
-                    #print >>log_buffer, 'received "{0}"'.format(data) 
-
-#                    if data:
-#                        msg = 'sending data back to client'
-#                        print >>log_buffer, msg
-#                        conn.sendall(data)
-#                    else:
-#                        msg = 'no more data from {0}:{1}'.format(*addr)
-#                        print >>log_buffer, msg
-#                        break
-            finally:
-                conn.close()
-
-    except KeyboardInterrupt:
-        sock.close()
-        return
-
-def parse_request(request):
-    first_line = request.split("\r\n", 1)[0]
-    method, uri, protocol = first_line.split()
-    if method != "GET":
-
-        raise NotImplementedError('This is not a GET request')
-    
-    print >>sys.stderr, 'request is okay'
-    return uri
-
-
-
-def response_method_not_allowed():
-    """returns a method_not_allowed HTTP response"""
-    resp = []
-    resp.append("HTTP/1.1 405 Method Not Allowed")
-    resp.append("")
-    return "\r\n".join(resp)
+#print >>sys.stderr, sys.path[0]
+server_path = sys.path[0]
 
 def response_ok():
     """returns a basic HTTP response"""
+    #directory = os.getcwd()
+    #print >>sys.stderr, directory
+    #print >>sys.stderr, sys.path[0]
     resp = []
     resp.append("HTTP/1.1 200 OK")
     resp.append("Content-Type: text/plain")
     resp.append("")
     resp.append("this is a pretty minimal response")
     return "\r\n".join(resp)
+
+def response_method_not_allowed():
+    """returns a 405 Method Not Allowed response"""
+    resp = []
+    resp.append("HTTP/1.1 405 Method Not Allowed")
+    resp.append("")
+    return "\r\n".join(resp)
+
+
+def parse_request(request):
+    first_line = request.split("\r\n", 1)[0]
+    method, uri, protocol = first_line.split()
+    print >>sys.stderr, 'This is the URI: ', uri
+    if method != "GET":
+        raise NotImplementedError("We only accept GET")
+    print >>sys.stderr, 'request is okay'
+    return uri
+
+def resolve_uri(uri):
+
+    home_dir = 'webroot'
+
+    print 'uri is: ', uri
+
+    print 'current dir is: ', os.getcwd()
+    
+    #Make sure we're in the right directory
+    if os.getcwd() == server_path:
+
+        #print 'switching from', os.getcwd()
+        os.chdir(home_dir)
+        #print 'New directory: ', os.getcwd()
+
+    #Remove leading slash and turn resource into an absolute path
+    path_to_resource = os.path.join(str(os.getcwd()),str(uri.strip('/')))
+
+    print 'The Path to the resource is: ', path_to_resource
+
+    #Guess the mimetype of the resource
+    mimetype_guess = mimetypes.guess_type(uri)
+
+    print 'It looks like the mimetype is: ', mimetypes.guess_type(uri)[0]
+    
+    #If this is a directory, set mimetype
+    if os.path.isdir(path_to_resource):
+        print '\nThis is a directory!\n' 
+        mimetype_guess = 'text/plain'
+
+    #begin formulating the response
+    resp = []
+    resp.append("HTTP/1.1 200 OK")
+    resp.append("Content-Type: text/plain")
+
+    #Add the guessed Mimetype
+    resp.append("Content-Type: {}".format(mimetype_guess[0]))
+
+    #Adding necessary blank line
+    resp.append("")
+
+    #Print each Entry if the URI is a directory
+    if os.path.isdir(path_to_resource):
+        [resp.append(i) for i in os.listdir(path_to_resource)]
+        #resp.append(os.listdir(path_to_resource))
+
+    #resp.append("This is where your code will show! ")
+    return "\r\n".join(resp)
+
+    #pass
+
+def response_not_found():
+    """returns a 404 - Not Found response"""
+    resp = []
+    resp.append("HTTP/1.1 404 Not Found!")
+    resp.append("")
+    return "\r\n".join(resp)
+
+def server():
+    address = ('127.0.0.1', 10000)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    print >>sys.stderr, "making a server on %s:%s" % address
+    sock.bind(address)
+    sock.listen(1)
+
+    try:
+        while True:
+            print >>sys.stderr, 'waiting for a connection'
+            conn, addr = sock.accept() # blocking
+            try:
+                print >>sys.stderr, 'connection - %s:%s' % addr
+                request = ""
+                while True:
+                    data = conn.recv(1024)
+                    request += data
+                    if len(data) < 1024 or not data:
+                        break
+
+                try:
+                    uri = parse_request(request)
+                except NotImplementedError:
+                    response = response_method_not_allowed()
+                else:
+                    # replace this line with the following once you have
+                    # written resolve_uri
+
+                    response = resolve_uri(uri)
+
+                    #response = response_ok()
+
+                    # content, type = resolve_uri(uri) # change this line
+
+                    ## uncomment this try/except block once you have fixed
+                    ## response_ok and added response_not_found
+                    # try:
+                    #     response = response_ok(content, type)
+                    # except NameError:
+                    #     response = response_not_found()
+
+                print >>sys.stderr, 'sending response'
+                conn.sendall(response)
+            finally:
+                conn.close()
+
+    except KeyboardInterrupt:
+        sock.close()
+        return
 
 
 if __name__ == '__main__':
