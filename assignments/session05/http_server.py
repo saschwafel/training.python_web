@@ -2,6 +2,7 @@ import mimetypes
 import os
 import socket
 import sys
+import glob
 
 #print >>sys.stderr, sys.path[0]
 server_path = sys.path[0]
@@ -64,6 +65,7 @@ def resolve_uri(uri):
     if os.path.isdir(path_to_resource):
         print '\nThis is a directory!\n' 
         mimetype_guess = 'text/plain'
+    
 
     #begin formulating the response
     resp = []
@@ -81,10 +83,15 @@ def resolve_uri(uri):
         [resp.append(i) for i in os.listdir(path_to_resource)]
         #resp.append(os.listdir(path_to_resource))
 
-    #resp.append("This is where your code will show! ")
+    #resp.append(file_object)
+
+    if mimetype_guess[0] == 'image/jpeg' or mimetype_guess[0] == 'image/png':
+
+        file_object = open(path_to_resource, 'rb')
+        return file_object.read()
+
     return "\r\n".join(resp)
 
-    #pass
 
 def response_not_found():
     """returns a 404 - Not Found response"""
