@@ -8,15 +8,18 @@ import glob
 server_path = sys.path[0]
 
 
-def response_ok(body, type):
+def response_ok(body, mimetype):
     """returns a basic HTTP response"""
     #directory = os.getcwd()
     #print >>sys.stderr, directory
     #print >>sys.stderr, sys.path[0]
+    if mimetype == None:
+        mimetype = 'text/plain'
+    
     resp = []
     resp.append("HTTP/1.1 200 OK")
     #resp.append("Content-Type: text/plain")
-    resp.append("Content-Type: ".format(type))
+    resp.append("Content-Type: {} ".format(mimetype))
     resp.append("")
     resp.append(body)
     #resp.append("this is a pretty minimal response")
@@ -45,10 +48,8 @@ def resolve_uri(uri):
 
     print 'uri is: ', uri
 
-	
-
-    print 'current dir is: ', os.getcwd()
-    print os.path.relpath(os.getcwd()) 
+    #print 'current dir is: ', os.getcwd()
+    #print os.path.relpath(os.getcwd()) 
     
     #Make sure we're in the right directory
     #Changes to webroot directory
@@ -173,7 +174,7 @@ def server():
 
                     #response = resolve_uri(uri)
                     
-                    content, type = resolve_uri(uri) # change this line
+                    content, mimetype = resolve_uri(uri) # change this line
 
                     ## uncomment this try/except block once you have fixed
                     ## response_ok and added response_not_found
