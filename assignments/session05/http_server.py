@@ -7,16 +7,18 @@ import glob
 #print >>sys.stderr, sys.path[0]
 server_path = sys.path[0]
 
-def response_ok(uri, mimetype):
+def response_ok(uri_content, mimetype):
     """returns a basic HTTP response"""
     #directory = os.getcwd()
     #print >>sys.stderr, directory
     #print >>sys.stderr, sys.path[0]
     resp = []
     resp.append("HTTP/1.1 200 OK")
-    resp.append("Content-Type: text/plain")
+    #resp.append("Content-Type: text/plain")
+    resp.append("Content-Type: ".format(mimetype))
     resp.append("")
-    resp.append("this is a pretty minimal response")
+    resp.append(uri_content)
+    #resp.append("this is a pretty minimal response")
     return "\r\n".join(resp)
 
 def response_method_not_allowed():
@@ -72,35 +74,39 @@ def resolve_uri(uri):
         print '\nThis is a directory!\n' 
         mimetype_guess = 'text/plain'
     
+    print 'Now The mimetype is: ', mimetype_guess
 
     #begin formulating the response
     resp = []
+    resolve_response = ''
+
     #resp.append("HTTP/1.1 200 OK")
-    resp.append("Content-Type: text/plain")
+    #resp.append("Content-Type: text/plain")
 
     #Add the guessed Mimetype
-    resp.append("Content-Type: {}".format(mimetype_guess[0]))
+    #resp.append("Content-Type: {}".format(mimetype_guess[0]))
 
     #Adding necessary blank line
-    resp.append("")
+    #resp.append("")
 
     #Print each Entry if the URI is a directory
     if os.path.isdir(path_to_resource):
         [resp.append(i) for i in os.listdir(path_to_resource)]
         #resp.append(os.listdir(path_to_resource))
+        resolve_response = "\r\n".join(resp)
 
     #resp.append(file_object)
 
     if mimetype_guess[0] == 'image/jpeg' or mimetype_guess[0] == 'image/png':
 
         file_object = open(path_to_resource, 'rb')
-        return file_object.read()
+        #return file_object.read()
+        resolve_response = file_object.read()
 
     #return "\r\n".join(resp)
-    print resolve_uri
-    print type(resolve_uri)
 
-    return ("\r\n".join(resp), mimetype_guess[0])
+    #return ("\r\n".join(resp), mimetype_guess[0])
+    return (resolve_response, mimetype_guess)
 
 
 def response_not_found():
@@ -141,6 +147,7 @@ def server():
                     # written resolve_uri
 
                     #response = resolve_uri(uri)
+                    
                     content, type = resolve_uri(uri) # change this line
 
                     ## uncomment this try/except block once you have fixed
