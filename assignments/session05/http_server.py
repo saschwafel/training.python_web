@@ -7,7 +7,8 @@ import glob
 #print >>sys.stderr, sys.path[0]
 server_path = sys.path[0]
 
-def response_ok(uri_content, mimetype):
+
+def response_ok(body, mimetype):
     """returns a basic HTTP response"""
     #directory = os.getcwd()
     #print >>sys.stderr, directory
@@ -17,7 +18,7 @@ def response_ok(uri_content, mimetype):
     #resp.append("Content-Type: text/plain")
     resp.append("Content-Type: ".format(mimetype))
     resp.append("")
-    resp.append(uri_content)
+    resp.append(body)
     #resp.append("this is a pretty minimal response")
     return "\r\n".join(resp)
 
@@ -45,13 +46,13 @@ def resolve_uri(uri):
     print 'uri is: ', uri
 
     print 'current dir is: ', os.getcwd()
-    
+    print os.path.relpath(os.getcwd()) 
     #Make sure we're in the right directory
     if os.getcwd() == server_path:
 
         #print 'switching from', os.getcwd()
         os.chdir(home_dir)
-        #print 'New directory: ', os.getcwd()
+        print 'New directory: ', os.getcwd()
 
     #Remove leading slash and turn resource into an absolute path
     path_to_resource = os.path.join(str(os.getcwd()),str(uri.strip('/')))
@@ -102,6 +103,13 @@ def resolve_uri(uri):
         file_object = open(path_to_resource, 'rb')
         #return file_object.read()
         resolve_response = file_object.read()
+    elif mimetype_guess[0] == 'text/plain': 
+	
+	resp.append("Content-Type: {}".format(mimetype_guess[0]))
+        file_object = open(path_to_resource, 'rb')
+        #return file_object.read()
+        resolve_response = file_object.read()
+        #resolve_response = "\r\n".join(resp)
 
     #return "\r\n".join(resp)
 
@@ -148,12 +156,12 @@ def server():
 
                     #response = resolve_uri(uri)
                     
-                    content, type = resolve_uri(uri) # change this line
+                    content, mimetype = resolve_uri(uri) # change this line
 
                     ## uncomment this try/except block once you have fixed
                     ## response_ok and added response_not_found
                     try:
-                        response = response_ok(content, type)
+                        response = response_ok(content, mimetype)
                     except NameError:
                         response = response_not_found()
 
