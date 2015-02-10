@@ -7,7 +7,7 @@ import glob
 #print >>sys.stderr, sys.path[0]
 server_path = sys.path[0]
 
-def response_ok():
+def response_ok(uri, mimetype):
     """returns a basic HTTP response"""
     #directory = os.getcwd()
     #print >>sys.stderr, directory
@@ -56,6 +56,7 @@ def resolve_uri(uri):
 
     #If resource doesn't exist, RETURN 404 with extreme prejudice
     if not os.path.exists(path_to_resource):
+        raise ValueError
         return response_not_found()
 
 
@@ -74,7 +75,7 @@ def resolve_uri(uri):
 
     #begin formulating the response
     resp = []
-    resp.append("HTTP/1.1 200 OK")
+    #resp.append("HTTP/1.1 200 OK")
     resp.append("Content-Type: text/plain")
 
     #Add the guessed Mimetype
@@ -95,13 +96,17 @@ def resolve_uri(uri):
         file_object = open(path_to_resource, 'rb')
         return file_object.read()
 
-    return "\r\n".join(resp)
+    #return "\r\n".join(resp)
+    print resolve_uri
+    print type(resolve_uri)
+
+    return ("\r\n".join(resp), mimetype_guess[0])
 
 
 def response_not_found():
     """returns a 404 - Not Found response"""
     resp = []
-    resp.append("HTTP/1.1 404 Not Found!")
+    resp.append("HTTP/1.1 404 Not Found")
     resp.append("")
     resp.append("THAT'S A 404, PLEASE TRY AGAIN!")
     return "\r\n".join(resp)
@@ -135,18 +140,15 @@ def server():
                     # replace this line with the following once you have
                     # written resolve_uri
 
-                    response = resolve_uri(uri)
-
-                    #response = response_ok()
-
-                    # content, type = resolve_uri(uri) # change this line
+                    #response = resolve_uri(uri)
+                    content, type = resolve_uri(uri) # change this line
 
                     ## uncomment this try/except block once you have fixed
                     ## response_ok and added response_not_found
-                    # try:
-                    #     response = response_ok(content, type)
-                    # except NameError:
-                    #     response = response_not_found()
+                    try:
+                        response = response_ok(content, type)
+                    except NameError:
+                        response = response_not_found()
 
                 print >>sys.stderr, 'sending response'
                 conn.sendall(response)
