@@ -54,6 +54,11 @@ def resolve_uri(uri):
     #Remove leading slash and turn resource into an absolute path
     path_to_resource = os.path.join(str(os.getcwd()),str(uri.strip('/')))
 
+    #If resource doesn't exist, RETURN 404 with extreme prejudice
+    if not os.path.exists(path_to_resource):
+        return response_not_found()
+
+
     print 'The Path to the resource is: ', path_to_resource
 
     #Guess the mimetype of the resource
@@ -98,6 +103,7 @@ def response_not_found():
     resp = []
     resp.append("HTTP/1.1 404 Not Found!")
     resp.append("")
+    resp.append("THAT'S A 404, PLEASE TRY AGAIN!")
     return "\r\n".join(resp)
 
 def server():
