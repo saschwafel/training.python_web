@@ -8,7 +8,7 @@ import glob
 server_path = sys.path[0]
 
 
-def response_ok(body, mimetype):
+def response_ok(body, type):
     """returns a basic HTTP response"""
     #directory = os.getcwd()
     #print >>sys.stderr, directory
@@ -16,7 +16,7 @@ def response_ok(body, mimetype):
     resp = []
     resp.append("HTTP/1.1 200 OK")
     #resp.append("Content-Type: text/plain")
-    resp.append("Content-Type: ".format(mimetype))
+    resp.append("Content-Type: ".format(type))
     resp.append("")
     resp.append(body)
     #resp.append("this is a pretty minimal response")
@@ -45,9 +45,13 @@ def resolve_uri(uri):
 
     print 'uri is: ', uri
 
+	
+
     print 'current dir is: ', os.getcwd()
     print os.path.relpath(os.getcwd()) 
+    
     #Make sure we're in the right directory
+    #Changes to webroot directory
     if os.getcwd() == server_path:
 
         #print 'switching from', os.getcwd()
@@ -55,12 +59,22 @@ def resolve_uri(uri):
         print 'New directory: ', os.getcwd()
 
     #Remove leading slash and turn resource into an absolute path
+#    if uri == '/':
+#	path_to_resource = os.getcwd()
+#	print 'path to resource is ', path_to_resource
+#    else:
+#
+#	path_to_resource = os.path.join(str(os.getcwd()),str(uri.strip('/')))
     path_to_resource = os.path.join(str(os.getcwd()),str(uri.strip('/')))
 
     #If resource doesn't exist, RETURN 404 with extreme prejudice
+    #print 'path to resource ', path_to_resource
+
     if not os.path.exists(path_to_resource):
+	#print path_to_resource
+	#print os.path.exists(path_to_resource)
         raise ValueError
-        return response_not_found()
+        return (response_not_found(), None)
 
 
     print 'The Path to the resource is: ', path_to_resource
@@ -95,6 +109,7 @@ def resolve_uri(uri):
         [resp.append(i) for i in os.listdir(path_to_resource)]
         #resp.append(os.listdir(path_to_resource))
         resolve_response = "\r\n".join(resp)
+	return (resolve_response, mimetype_guess)
 
     #resp.append(file_object)
 
@@ -150,13 +165,15 @@ def server():
                     uri = parse_request(request)
                 except NotImplementedError:
                     response = response_method_not_allowed()
+                except ValueError:
+                    response = response_not_found()
                 else:
                     # replace this line with the following once you have
                     # written resolve_uri
 
                     #response = resolve_uri(uri)
                     
-                    content, mimetype = resolve_uri(uri) # change this line
+                    content, type = resolve_uri(uri) # change this line
 
                     ## uncomment this try/except block once you have fixed
                     ## response_ok and added response_not_found
