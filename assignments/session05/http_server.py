@@ -72,11 +72,9 @@ def resolve_uri(uri):
     #print 'path to resource ', path_to_resource
 
     if not os.path.exists(path_to_resource):
-	#print path_to_resource
-	#print os.path.exists(path_to_resource)
+        #print path_to_resource
+        #print os.path.exists(path_to_resource)
         raise ValueError
-        return (response_not_found(), None)
-
 
     print 'The Path to the resource is: ', path_to_resource
 
@@ -166,8 +164,6 @@ def server():
                     uri = parse_request(request)
                 except NotImplementedError:
                     response = response_method_not_allowed()
-                except ValueError:
-                    response = response_not_found()
                 else:
                     # replace this line with the following once you have
                     # written resolve_uri
@@ -180,8 +176,10 @@ def server():
                     ## response_ok and added response_not_found
                     try:
                         response = response_ok(content, mimetype)
-                    except NameError:
+                    except NameError, ValueError:
                         response = response_not_found()
+                    #except ValueError:
+                    #    response = response_not_found()
 
                 print >>sys.stderr, 'sending response'
                 conn.sendall(response)
