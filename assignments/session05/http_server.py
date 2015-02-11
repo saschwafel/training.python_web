@@ -10,8 +10,7 @@ server_path = sys.path[0]
 
 def response_ok(body, mimetype):
     """returns a basic HTTP response"""
-    #directory = os.getcwd()
-    #print >>sys.stderr, directory
+    #directory = os.getcwd() #print >>sys.stderr, directory
     #print >>sys.stderr, sys.path[0]
     if mimetype == None:
         mimetype = 'text/plain'
@@ -169,15 +168,20 @@ def server():
                     # written resolve_uri
 
                     #response = resolve_uri(uri)
-                    
-                    content, mimetype = resolve_uri(uri) # change this line
+                    try: 
+                         
+                        content, mimetype = resolve_uri(uri) # change this line
+
+                    except ValueError:
+                        
+                        response = response_not_found()
 
                     ## uncomment this try/except block once you have fixed
                     ## response_ok and added response_not_found
-                    try:
-                        response = response_ok(content, mimetype)
-                    except NameError, ValueError:
-                        response = response_not_found()
+                    #try:
+                    #    response = response_ok(content, mimetype)
+                    #except NameError:
+                    #    response = response_not_found()
                     #except ValueError:
                     #    response = response_not_found()
 
